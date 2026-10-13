@@ -1,0 +1,22 @@
+# Local toolchains, backups and editor state
+/.tools/
+/.local/
+/.cache/
+/.vscode/
+/.DS_Store
+# Generated build output and component caches
+/build/
+/.zig-cache/
+/zig-out/
+/managed_components/
+/sdkconfig
+/sdkconfig.old
+*.pyc
+__pycache__/
+# Documentation and agent memory stay local; publish only the root README.
+*.md
+*.markdown
+!/README.md
+/memories/
+/third_party/doomgeneric/
+# Keep dependencies.lock, vendored source, licenses and NOTICE tracked.

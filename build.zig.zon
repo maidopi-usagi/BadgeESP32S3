@@ -1,0 +1,23 @@
+.{
+    .name = .jirai_badge,
+    .version = "0.1.0",
+    .fingerprint = 0xed3e1788a4636518,
+    .dependencies = .{},
+    .paths = .{
+        "src",
+        "boards",
+        "components",
+        "assets",
+        "scripts",
+        "third_party",
+        "CMakeLists.txt",
+        "dependencies.json",
+        "dependencies.lock",
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "NOTICE",
+        "README.md",
+    },
+}

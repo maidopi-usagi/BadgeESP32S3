@@ -1,0 +1,10 @@
+# Preserve the reviewed header bytes used by dependencies.json SHA256 checks.
+third_party/esp-idf-sys/bindings.h text eol=lf
+# Bash entry scripts must remain executable on Unix after a Windows checkout.
+scripts/*.sh text eol=lf
+# Zig fmt expects LF even in a Windows checkout.
+*.zig text eol=lf
+*.zig.zon text eol=lf
+# Keep source patches and build manifests identical across hosts.
+components/doom_engine/patches/*.patch text eol=lf -whitespace
+components/doom_engine/sources.txt text eol=lf

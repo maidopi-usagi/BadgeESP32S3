@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "esp_idf": {
+    "version": "5.5.2",
+    "ref": "v5.5.2",
+    "repository": "https://github.com/espressif/esp-idf.git",
+    "commit": "30aaf64524299d3bde422ca9a2848090d1bc5d0f"
+  },
+  "zig": {
+    "version": "0.17.0-xtensa",
+    "repository": "https://github.com/kassane/zig-espressif-bootstrap",
+    "archives": {
+      "aarch64-macos-baseline": "ad389106a954daba4527f6d176beab17048b1024f264b37adc21003fb5e31d65",
+      "aarch64-linux-musl-baseline": "caf295687d16d1cf939d709faeafc56c499f6735394baf42f187ea3ea1db7c6e",
+      "x86_64-linux-musl-baseline": "aeb04ec3b091c040dd6201f923c3f779ae13c06c9556b3d8a571f489bbe23031",
+      "x86_64-windows-baseline": "a388c83e427aa91ca7e231525ff08d098e808861a09f5faa679b99a82b5f3e9d"
+    }
+  },
+  "zig_esp_idf": {
+    "repository": "https://github.com/kassane/zig-esp-idf-sample",
+    "commit": "2a90964b79fa13e6c628ab723bf32b4b8f51e00e",
+    "path": "third_party/zig-esp-idf"
+  },
+  "doomgeneric": {
+    "repository": "https://github.com/ozkl/doomgeneric",
+    "commit": "e257a09527062bfb986b6e5e0780839b6cbd5b71",
+    "path": ".local/deps/doomgeneric",
+    "license": "GPL-2.0-or-later",
+    "shareware_iwad": {
+      "url": "https://raw.githubusercontent.com/Akbar30Bill/DOOM_wads/master/doom1.wad",
+      "bytes": 4196020,
+      "sha256": "1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771"
+    },
+    "archive": {
+      "url": "https://codeload.github.com/ozkl/doomgeneric/tar.gz/e257a09527062bfb986b6e5e0780839b6cbd5b71",
+      "bytes": 3090826,
+      "sha256": "26f8f60daa6c6e4d3c01e5eac9fb700d592dede803d13ac848154ff356b2a2e7"
+    }
+  },
+  "esp_idf_sys": {
+    "repository": "https://github.com/esp-rs/esp-idf-sys",
+    "commit": "2d6dd6106f2240d1f177f2ec56b6d5b78ba537ce",
+    "header": "third_party/esp-idf-sys/bindings.h",
+    "sha256": "bfca57fd7c0a27d2b14567e5fc7653f2cc5a02385d4168c93653faf7c82d222d"
+  }
+}

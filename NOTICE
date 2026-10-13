@@ -1,0 +1,37 @@
+BadgeESP32S3 -- source and asset provenance
+
+Zig / ESP-IDF integration
+  https://github.com/kassane/zig-esp-idf-sample
+  Snapshot: 2a90964b79fa13e6c628ab723bf32b4b8f51e00e
+  Adapted module registration, pinned toolchain downloads, generated binding
+  paths, application build options and Windows host support. Original license
+  texts are retained in the repository root and third_party/zig-esp-idf/.
+
+ESP-IDF reference bindings
+  https://github.com/esp-rs/esp-idf-sys
+  Snapshot: 2d6dd6106f2240d1f177f2ec56b6d5b78ba537ce
+  bindings.h only; MIT / Apache-2.0 license texts are retained alongside it.
+
+DoomGeneric
+  https://github.com/ozkl/doomgeneric
+  Snapshot: e257a09527062bfb986b6e5e0780839b6cbd5b71
+  Doom by id Software; original source cleanup by Bernd Kreimeier.
+  GPL-2.0-or-later; see components/doom_engine/LICENSE and source headers.
+  Sources are downloaded into .local/deps/doomgeneric at build time, checked
+  against a pinned SHA256 and patched from components/doom_engine/patches/.
+  Local changes: RGB565 allocation and palette conversion, diagnostic format
+  fixes, a read-only mapped IWAD and task-scoped error/exit handling.
+  Firmware incorporating this engine is subject to its GPL terms; the template
+  licenses do not replace them. Game data is separately licensed. The Doom 1.9
+  shareware IWAD is fetched and verified during the build, not stored in Git.
+
+Fumo model and texture
+  https://github.com/maidopi-usagi/FumoTap/blob/75b511d68307f54ca6705b4efdb9b58d04eb2e54/public/models/fumo.glb
+  Source SHA256: 51b059e2f41005086942c85f2b549739b9e78aef1a009534b4e5c161ea20342a
+  Stored as assets/models/fumo/source.glb. Build-time conversion normalizes the
+  mesh, quantizes attributes and downsamples the texture to 128x128 RGB565.
+  The upstream snapshot provides no license for this asset; it is not covered
+  by this repository's code licenses.
+
+Toolchain and dependency revisions/checksums are pinned in dependencies.json
+and dependencies.lock. Existing source copyright notices remain intact.

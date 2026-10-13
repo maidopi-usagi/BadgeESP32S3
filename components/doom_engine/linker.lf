@@ -1,0 +1,5 @@
+# The renderer's large static arrays must not consume internal DMA/stack RAM.
+[mapping:doom_engine]
+archive: libdoom_engine.a
+entries:
+    * (extram_bss)

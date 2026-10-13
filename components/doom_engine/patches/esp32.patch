@@ -1,0 +1,91 @@
+--- a/doomgeneric.c
++++ b/doomgeneric.c
+@@ -18,7 +18,14 @@
+ 
+ 	M_FindResponseFile();
+ 
+-	DG_ScreenBuffer = malloc(DOOMGENERIC_RESX * DOOMGENERIC_RESY * 4);
++#ifndef DOOMGENERIC_FB_BYTES_PER_PIXEL
++#define DOOMGENERIC_FB_BYTES_PER_PIXEL 4
++#endif
++    DG_ScreenBuffer = malloc(DOOMGENERIC_RESX * DOOMGENERIC_RESY * DOOMGENERIC_FB_BYTES_PER_PIXEL);
++    if (!DG_ScreenBuffer) {
++        extern void I_Error(char *, ...);
++        I_Error("Unable to allocate Doom framebuffer");
++    }
+ 
+ 	DG_Init();
+ 
+--- a/i_system.c
++++ b/i_system.c
+@@ -245,6 +245,10 @@
+ 
+ void I_Quit (void)
+ {
++#ifdef ESP_PLATFORM
++    extern void badge_doom_fatal(const char *) __attribute__((noreturn));
++    badge_doom_fatal("Doom exited; other demos remain available");
++#endif
+     atexit_listentry_t *entry;
+ 
+     // Run through all exit functions
+@@ -388,6 +392,10 @@
+     memset(msgbuf, 0, sizeof(msgbuf));
+     M_vsnprintf(msgbuf, sizeof(msgbuf), error, argptr);
+     va_end(argptr);
++#ifdef ESP_PLATFORM
++    extern void badge_doom_fatal(const char *) __attribute__((noreturn));
++    badge_doom_fatal(msgbuf);
++#endif
+ 
+     // Shutdown. Here might be other errors.
+ 
+--- a/i_video.c
++++ b/i_video.c
+@@ -166,9 +166,7 @@
+         if (s_Fb.bits_per_pixel == 16)
+         {
+             // RGB565 packing
+-            uint16_t p = ((c.r & 0xF8) << 8) |
+-                         ((c.g & 0xFC) << 3) |
+-                         (c.b >> 3);
++            uint16_t p = rgb565_palette[*in];
+ 
+ #ifdef SYS_BIG_ENDIAN
+             p = swapeLE16(p); // can't use SHORT() because this needs to stay unsigned
+@@ -265,10 +263,11 @@
+ #endif  // CMAP256
+ 
+     printf("I_InitGraphics: framebuffer: x_res: %d, y_res: %d, x_virtual: %d, y_virtual: %d, bpp: %d\n",
+-            s_Fb.xres, s_Fb.yres, s_Fb.xres_virtual, s_Fb.yres_virtual, s_Fb.bits_per_pixel);
++            (int)s_Fb.xres, (int)s_Fb.yres, (int)s_Fb.xres_virtual, (int)s_Fb.yres_virtual, (int)s_Fb.bits_per_pixel);
+ 
+     printf("I_InitGraphics: framebuffer: RGBA: %d%d%d%d, red_off: %d, green_off: %d, blue_off: %d, transp_off: %d\n",
+-            s_Fb.red.length, s_Fb.green.length, s_Fb.blue.length, s_Fb.transp.length, s_Fb.red.offset, s_Fb.green.offset, s_Fb.blue.offset, s_Fb.transp.offset);
++            (int)s_Fb.red.length, (int)s_Fb.green.length, (int)s_Fb.blue.length, (int)s_Fb.transp.length,
++            (int)s_Fb.red.offset, (int)s_Fb.green.offset, (int)s_Fb.blue.offset, (int)s_Fb.transp.offset);
+ 
+     printf("I_InitGraphics: DOOM screen size: w x h: %d x %d\n", SCREENWIDTH, SCREENHEIGHT);
+ 
+@@ -410,6 +409,8 @@
+         colors[i].r = gammatable[usegamma][*palette++];
+         colors[i].g = gammatable[usegamma][*palette++];
+         colors[i].b = gammatable[usegamma][*palette++];
++        rgb565_palette[i] = ((colors[i].r & 0xF8) << 8) |
++                            ((colors[i].g & 0xFC) << 3) | (colors[i].b >> 3);
+     }
+ 
+ #ifdef CMAP256
+--- a/m_misc.c
++++ b/m_misc.c
+@@ -65,6 +65,10 @@
+ 
+ boolean M_FileExists(char *filename)
+ {
++#ifdef ESP_PLATFORM
++    // The sole IWAD is validated and memory-mapped by our platform backend.
++    if (!strcmp(filename, "doom1.wad")) return true;
++#endif
+     FILE *fstream;
+ 
+     fstream = fopen(filename, "r");
