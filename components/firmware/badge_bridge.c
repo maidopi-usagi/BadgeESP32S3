@@ -11,6 +11,7 @@
 
 static bool ui_created;
 static lv_image_dsc_t pixel_image;
+static lv_image_dsc_t overlay_image;
 
 static void refresh_stats(lv_event_t *event)
 {
@@ -145,15 +146,36 @@ void *badge_ui_pixels(uint16_t *pixels, uint16_t size, uint16_t scale, uint16_t 
 void badge_ui_pixels_changed(void *image)
 {
     /* Mutable RGB565 data can have a cached conversion; drop it before redraw. */
-    lv_image_cache_drop(&pixel_image);
+    lv_image_cache_drop(lv_image_get_src(image));
     lv_obj_invalidate(image);
 }
 
 void badge_ui_pixels_changed_area(void *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
     const lv_area_t area = {.x1 = x, .y1 = y, .x2 = x + width - 1, .y2 = y + height - 1};
-    lv_image_cache_drop(&pixel_image);
+    lv_image_cache_drop(lv_image_get_src(image));
     lv_obj_invalidate_area(image, &area);
+}
+
+void *badge_ui_overlay(uint16_t *pixels, uint16_t width, uint16_t height, int16_t x, int16_t y)
+{
+    overlay_image = (lv_image_dsc_t){
+        .header = {
+            .magic = LV_IMAGE_HEADER_MAGIC,
+            .cf = LV_COLOR_FORMAT_RGB565,
+            .w = width,
+            .h = height,
+            .stride = width * sizeof(uint16_t),
+        },
+        .data_size = width * height * sizeof(uint16_t),
+        .data = (const uint8_t *)pixels,
+    };
+    lv_obj_t *image = lv_image_create(lv_layer_top());
+    if (!image) return NULL;
+    lv_image_set_src(image, &overlay_image);
+    lv_obj_set_pos(image, x, y);
+    lv_obj_remove_flag(image, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    return image;
 }
 
 #if !BADGE_DISPLAY_BENCHMARK

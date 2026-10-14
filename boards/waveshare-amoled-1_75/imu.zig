@@ -1,24 +1,7 @@
 const std = @import("std");
-const log = std.log.scoped(.espressif);
-const Handle = *anyopaque;
-// IDF 5.5.2 i2c_device_config_t; translate-c leaves its bitfield opaque.
-const DeviceConfig = extern struct {
-    address_length: c_int = 0, // I2C_ADDR_BIT_LEN_7
-    address: u16 = 0x6B,
-    speed_hz: u32 = 400000,
-    wait_us: u32 = 0,
-    flags: u32 = 0, // ACK checking enabled
-};
-comptime {
-    if (@sizeOf(DeviceConfig) != 20 or @offsetOf(DeviceConfig, "speed_hz") != 8 or @offsetOf(DeviceConfig, "flags") != 16) @compileError("I2C device-config ABI mismatch");
-}
-extern fn bsp_i2c_get_handle() ?Handle;
-extern fn i2c_master_bus_add_device(bus: Handle, config: *const DeviceConfig, device: *?Handle) c_int;
-extern fn i2c_master_bus_rm_device(device: Handle) c_int;
-extern fn i2c_master_transmit(device: Handle, data: [*]const u8, size: usize, timeout_ms: c_int) c_int;
-extern fn i2c_master_transmit_receive(device: Handle, data: [*]const u8, size: usize, output: [*]u8, output_size: usize, timeout_ms: c_int) c_int;
+const I2c = @import("i2c.zig").Device;
 
-var device: ?Handle = null;
+var device: ?I2c = null;
 pub const Mode = enum { off, accelerometer, six_axis };
 var mode: Mode = .off; // Owned by the motion worker, together with the I2C device.
 pub const Info = struct { id: u8, revision: u8 };
@@ -32,9 +15,7 @@ pub fn screenAxes(values: [3]f32) [3]f32 {
 }
 
 pub fn open(delay_ms: *const fn (u32) void) !Info {
-    const bus = bsp_i2c_get_handle() orelse return error.I2cNotReady;
-    const config: DeviceConfig = .{};
-    if (i2c_master_bus_add_device(bus, &config, &device) != 0) return error.ImuAddFailed;
+    device = try I2c.open(0x6B);
     errdefer close();
     var id: [1]u8 = undefined;
     try read(0x00, &id);
@@ -113,28 +94,18 @@ fn read(reg: u8, output: []u8) !void {
 
 fn readWithTimeout(reg: u8, output: []u8, timeout_ms: c_int) !void {
     const handle = device orelse return error.ImuNotOpen;
-    const address = [_]u8{reg};
-    const result = i2c_master_transmit_receive(handle, &address, 1, output.ptr, output.len, timeout_ms);
-    if (result != 0) {
-        log.warn("IMU read reg=0x{x}, IDF error=0x{x}", .{ reg, result });
-        return error.ImuReadFailed;
-    }
+    try handle.read(reg, output, timeout_ms);
 }
 
 fn write(reg: u8, value: u8) !void {
     const handle = device orelse return error.ImuNotOpen;
-    const bytes = [_]u8{ reg, value };
-    const result = i2c_master_transmit(handle, &bytes, bytes.len, 100);
-    if (result != 0) {
-        log.warn("IMU write reg=0x{x}, IDF error=0x{x}", .{ reg, result });
-        return error.ImuWriteFailed;
-    }
+    try handle.write(reg, value, 100);
 }
 
 pub fn close() void {
     if (device) |handle| {
         setMode(.off) catch {};
-        _ = i2c_master_bus_rm_device(handle);
+        handle.close();
         device = null;
     }
     mode = .off;

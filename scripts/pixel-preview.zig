@@ -101,6 +101,11 @@ pub fn main() !void {
         demos.jirai.navigation(canvas, 0, demos.navigation.demo_count, demos.colors.accent, demos.colors.border);
     }
     if (options.demo == .fumo or options.demo == .dice) pixel.expandNearest(canvas, &frame, viewport);
+    const battery_mode = std.meta.stringToEnum(demos.battery.Mode, options.battery_mode).?;
+    demos.battery.composite(pixel.Canvas.init(&frame, 466, 466), .{
+        .mode = battery_mode,
+        .percent = if (battery_mode == .unknown or battery_mode == .absent) null else options.battery_percent,
+    }, options.time_ms);
     if (@import("builtin").os.tag == .windows) _ = _setmode(1, 0x8000);
     output("P6\n466 466\n255\n");
     var row: [466 * 3]u8 = undefined;

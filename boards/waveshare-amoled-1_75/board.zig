@@ -7,6 +7,7 @@ pub const Display = @import("display.zig");
 pub const Audio = @import("audio.zig");
 pub const Imu = @import("imu.zig");
 pub const Power = @import("power.zig");
+pub const Battery = @import("battery.zig");
 pub const pins = struct {
     pub const i2c = .{ .scl = 14, .sda = 15 };
     pub const lcd = .{ .data = [4]u8{ 4, 5, 6, 7 }, .clock = 38, .cs = 12, .reset = 39, .te = 13 };

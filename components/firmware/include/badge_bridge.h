@@ -7,6 +7,7 @@ void badge_display_unlock(void);
 void *badge_ui_pixels(uint16_t *pixels, uint16_t size, uint16_t scale, uint16_t offset);
 void badge_ui_pixels_changed(void *image);
 void badge_ui_pixels_changed_area(void *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+void *badge_ui_overlay(uint16_t *pixels, uint16_t width, uint16_t height, int16_t x, int16_t y);
 int badge_ui_animate(uint32_t period_ms);
 int badge_touch_install(void);
 void badge_touch_resync(void);

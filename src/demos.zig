@@ -10,3 +10,4 @@ pub const navigation = @import("ui/navigation.zig");
 pub const pixel = @import("ui/pixel_canvas.zig");
 pub const jirai = @import("ui/jirai.zig");
 pub const colors = @import("ui/theme.zig").colors;
+pub const battery = @import("ui/battery.zig");

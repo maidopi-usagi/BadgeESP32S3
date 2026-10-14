@@ -9,6 +9,7 @@ const dice = @import("dice.zig");
 const jirai = @import("jirai.zig");
 const colors = @import("theme.zig").colors;
 const pixel = @import("pixel_canvas.zig");
+const battery = @import("battery.zig");
 const viewport = pixel.Viewport.init(@import("render_options").pixel_scale);
 const log = std.log.scoped(idf.log.default_log_scope);
 const motion = @import("../motion/service.zig");
@@ -61,11 +62,34 @@ var renderer: model.Renderer = undefined;
 var canvas: pixel.Canvas = undefined;
 var frame: []u16 = undefined;
 var image: display.Object = undefined;
+var battery_image: display.Object = undefined;
+var battery_pixels: [battery.width * battery.height]u16 align(4) = undefined;
+var battery_state: battery.State = .{};
+var battery_dirty = false;
+var battery_pulse = false;
 var ready = false;
 var scene_start_ms: u64 = 0;
 var scene_ms: u64 = 0;
 var heap = idf.heap.HeapCapsAllocator.init(.{ .spiram = true, .@"8bit" = true });
 var sleep_started_ms: u64 = 0;
+
+// Called by the power task with the display mutex held.
+pub fn setBattery(reading: ?battery.Reading) void {
+    const next = battery.State.fromReading(reading);
+    if (!std.meta.eql(battery_state, next)) {
+        battery_state = next;
+        battery_dirty = true;
+    }
+}
+
+fn batteryFrame(now_ms: u64) void {
+    const pulse = battery_state.pulse(now_ms);
+    if (!battery_dirty and pulse == battery_pulse) return;
+    battery.paint(pixel.Canvas.init(&battery_pixels, battery.width, battery.height), battery_state, now_ms);
+    display.badge_ui_pixels_changed(battery_image);
+    battery_dirty = false;
+    battery_pulse = pulse;
+}
 
 /// The power task calls these with the LVGL worker paused and display locked.
 pub fn pauseForSleep(now: u64) void {
@@ -144,6 +168,9 @@ pub fn init() !void {
     try display.lock();
     defer display.unlock();
     image = display.badge_ui_pixels(frame.ptr, pixel.Viewport.panel_size, 1, 0) orelse return error.ImageCreateFailed;
+    battery.paint(pixel.Canvas.init(&battery_pixels, battery.width, battery.height), battery_state, 0);
+    battery_image = display.badge_ui_overlay(&battery_pixels, battery.width, battery.height, battery.x, battery.y) orelse return error.OverlayCreateFailed;
+    log.info("Battery overlay ready: top layer, {d}x{d}, touch passthrough", .{ battery.width, battery.height });
     scene_start_ms = @intCast(@divTrunc(idf.sys.esp_timer_get_time(), 1000));
     _ = animation.advance(scene_start_ms);
     dice_state.reenter(scene_start_ms);
@@ -542,6 +569,7 @@ const CallbackPerf = struct {
 
 export fn badge_on_frame(now_ms: u64) callconv(.c) void {
     if (!ready) return;
+    batteryFrame(now_ms);
     paint_ms = now_ms;
     if (router.active == .physics) return simulationFrame(physics_service, "Rigid", &physics_perf, now_ms);
     if (router.active == .fluid) return simulationFrame(fluid_service, "Fluid", &fluid_perf, now_ms);

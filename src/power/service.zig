@@ -15,9 +15,19 @@ pub fn run() void {
         log.err("PWR unavailable: {s}; demos remain active", .{@errorName(err)});
         while (true) idf.rtos.Task.delayMs(5000);
     };
+    const battery = board.Battery.Monitor.open() catch |err| blk: {
+        log.warn("Battery monitor unavailable: {s}", .{@errorName(err)});
+        break :blk null;
+    };
+    if (battery) |monitor| {
+        log.info("AXP2101 ready: addr=0x34, ID=0x4a; read-only battery telemetry", .{});
+        pollBattery(monitor, true);
+    }
     var button: Button = .{};
     var errors: u8 = 0;
     var heartbeat = nowMs();
+    var battery_poll = heartbeat;
+    var battery_report = heartbeat;
     log.info("PWR ready: TCA9554 EXIO4 active-high, 30ms debounce; press to sleep/wake; USB host keeps console alive", .{});
     while (true) {
         idf.rtos.Task.delayMs(20);
@@ -31,12 +41,43 @@ pub fn run() void {
         if (button.sample(pressed, nowMs())) {
             sleepCycle(&button) catch |err| log.err("Sleep cancelled/recovered: {s}", .{@errorName(err)});
             heartbeat = nowMs();
+            battery_poll = 0;
+        }
+        if (nowMs() - battery_poll >= 1000) {
+            const report = nowMs() - battery_report >= 5000;
+            if (battery) |monitor| pollBattery(monitor, report);
+            battery_poll = nowMs();
+            if (report) battery_report = battery_poll;
         }
         if (nowMs() - heartbeat >= 5000) {
             log.info("badge runtime alive", .{});
             heartbeat = nowMs();
         }
     }
+}
+
+fn pollBattery(monitor: board.Battery.Monitor, report: bool) void {
+    const reading = monitor.read() catch |err| blk: {
+        log.warn("Battery read failed: {s}", .{@errorName(err)});
+        break :blk null;
+    };
+    board.Display.lock() catch |err| {
+        log.warn("Battery UI lock failed: {s}", .{@errorName(err)});
+        return;
+    };
+    ui.setBattery(if (reading) |value| .{
+        .present = value.present,
+        .percent = value.percent,
+        .external_power = value.vbus_good,
+        .charging = value.direction == .charging,
+        .charge_done = value.phase == .done,
+    } else null);
+    board.Display.unlock();
+    if (!report) return;
+    const sample = reading orelse return;
+    log.info("Battery: present={}, voltage_mv={?d}, gauge_percent={?d}, vbus_good={}, direction={s}, charge_phase={s}", .{
+        sample.present, sample.millivolts, sample.percent, sample.vbus_good, @tagName(sample.direction), @tagName(sample.phase),
+    });
 }
 
 fn sleepCycle(button: *Button) !void {

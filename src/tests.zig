@@ -23,6 +23,7 @@ test {
     _ = @import("dice/controller.zig");
     _ = @import("power/button.zig");
     _ = @import("power/pause.zig");
+    _ = @import("ui/battery.zig");
     _ = @import("simulation/clock.zig");
 }
 

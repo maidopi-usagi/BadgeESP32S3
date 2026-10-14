@@ -114,6 +114,12 @@ pub fn build(b: *std.Build) void {
     preview.root_module.addOptions("render_options", render_options);
     const preview_options = b.addOptions();
     preview_options.addOption(u64, "time_ms", b.option(u64, "preview-time-ms", "Model animation time for the preview") orelse 0);
+    const battery_mode = b.option([]const u8, "preview-battery", "Battery overlay: unknown/absent/battery/usb/charging/full") orelse "full";
+    _ = std.meta.stringToEnum(@import("src/ui/battery.zig").Mode, battery_mode) orelse @panic("Invalid preview-battery");
+    const battery_percent = b.option(u8, "preview-battery-percent", "Battery percentage for the preview") orelse 100;
+    if (battery_percent > 100) @panic("preview-battery-percent must be <=100");
+    preview_options.addOption([]const u8, "battery_mode", battery_mode);
+    preview_options.addOption(u8, "battery_percent", battery_percent);
     preview_options.addOption(?u64, "bounce_ms", b.option(u64, "preview-bounce-ms", "Milliseconds after a tap; holds the view still"));
     preview_options.addOption(f32, "pitch", b.option(f32, "preview-pitch", "Orbit pitch in radians") orelse 0.12);
     const preview_name = b.option([]const u8, "preview-demo", "Preview fumo, dice, cornell, doom, sandbox, rhythm, fluid or physics") orelse "fumo";

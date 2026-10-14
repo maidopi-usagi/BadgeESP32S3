@@ -6,6 +6,7 @@ extern fn badge_display_unlock() void;
 pub extern fn badge_ui_pixels(pixels: [*]u16, size: u16, scale: u16, offset: u16) ?Object;
 pub extern fn badge_ui_pixels_changed(image: Object) void;
 pub extern fn badge_ui_pixels_changed_area(image: Object, x: u16, y: u16, width: u16, height: u16) void;
+pub extern fn badge_ui_overlay(pixels: [*]u16, width: u16, height: u16, x: i16, y: i16) ?Object;
 extern fn badge_ui_animate(period_ms: u32) c_int;
 extern fn esp_lv_adapter_pause(timeout_ms: i32) c_int;
 extern fn esp_lv_adapter_resume() c_int;
